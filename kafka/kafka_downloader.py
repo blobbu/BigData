@@ -19,7 +19,7 @@ HEADERS = {
     
 }
 
-logger = logging.getLogger(f'kafka_downloader - {os.getpid()}')
+logger = logging.getLogger(f'kafka_downloader|{os.getpid()}')
 logger.setLevel(logging.DEBUG)
 fh = logging.FileHandler('kafka_downloader.log')
 fh.setLevel(logging.DEBUG)
