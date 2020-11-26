@@ -4,15 +4,13 @@ from kafka.errors import KafkaError
 import csv
 import json
 import logging
-import threading
-import time
-import queue
-import zipfile
 import requests
 from io import BytesIO
 import pyzipper
 import base64
-
+from kafka_logging import KafkaHandler
+import constants
+import os
 
 PASSWORD = b'infected'
 API_URL = 'https://mb-api.abuse.ch/api/v1/'
@@ -21,21 +19,19 @@ HEADERS = {
     
 }
 
-INPUT_TOPIC = 'samples-json'
-OUTPUT_TOPIC = 'samples-exe'
-
-logger = logging.getLogger('kafka_downloader')
+logger = logging.getLogger(f'kafka_downloader - {os.getpid()}')
 logger.setLevel(logging.DEBUG)
 fh = logging.FileHandler('kafka_downloader.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
+kh = KafkaHandler(constants.BOOTSTRAP_SERVERS, constants.TOPIC_LOGS)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
-
+logger.addHandler(kh)
 
 
 def download_sample(sha256):
@@ -52,8 +48,7 @@ def download_sample(sha256):
             else:
                 logger.error(f'Non zip content type! SHA256:{sha256} Content:{r.headers["content-type"]}')
         else:
-            logger.error(f'Non 200 response code! SHA256:{sha256} Status:{r.status_code}')
-        
+            logger.error(f'Non 200 response code! SHA256:{sha256} Status:{r.status_code}')  
     except Exception as err:
         logger.error(f'Download failure! SHA256:{sha256} Error:{err}')
     return zip_file
@@ -77,7 +72,7 @@ def send(producer, file_exe, sha256):
         'sha256': sha256,
         'base64_file': base64.b64encode(file_exe).decode('utf-8')
     }
-    producer.send(OUTPUT_TOPIC, data).add_callback(on_send_success, sha256=sha256).add_errback(on_send_error, sha256=sha256)
+    producer.send(constants.TOPIC_SAMPLE_EXE, data).add_callback(on_send_success, sha256=sha256).add_errback(on_send_error, sha256=sha256)
 
 
 def on_send_success(record_metadata, sha256):
@@ -88,15 +83,17 @@ def on_send_error(e, sha256):
     logger.error(f'Failure! SHA256:{sha256} Error:{e}')
 
 def main():
-    consumer = KafkaConsumer(INPUT_TOPIC,
-                         group_id='my-group',
-                         bootstrap_servers=['10.7.38.65:9092'],
+    consumer = KafkaConsumer(constants.TOPIC_SAMPLE_JSON,
+                         group_id=constants.GENERIC_GROUP,
+                         bootstrap_servers=constants.BOOTSTRAP_SERVERS,
                          value_deserializer=lambda m: json.loads(m.decode('utf-8')),
-                         auto_offset_reset='earliest', 
-                         enable_auto_commit=False)
+                         auto_offset_reset='earliest',
+                         max_poll_records=1,
+                         #enable_auto_commit=False # only for testing, makes using multiple consumer impossible
+                         )
     
     producer = KafkaProducer(
-        bootstrap_servers=['10.7.38.65:9092'], 
+        bootstrap_servers=constants.BOOTSTRAP_SERVERS, 
         retries=5,
         value_serializer=lambda x: 
                             json.dumps(x).encode('utf-8'),
@@ -105,9 +102,9 @@ def main():
     for message in consumer:
         logging.info(f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
         sha256 = message.value['sha256']
-        zipped_file = download_sample(sha256)
-        unzipped_file = unzip(zipped_file, sha256)
-        send(producer, unzipped_file, sha256)
+        if zipped_file := download_sample(sha256):
+            if unzipped_file := unzip(zipped_file, sha256):
+                send(producer, unzipped_file, sha256)
 
 if __name__ == "__main__":
     main()

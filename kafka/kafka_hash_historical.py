@@ -3,8 +3,8 @@ from kafka.errors import KafkaError
 import csv
 import json
 import logging
-
-KAFKA_TOPIC = 'samples-json'
+import constants
+from kafka_logging import KafkaHandler
 
 logger = logging.getLogger('kafka_hash_historical')
 logger.setLevel(logging.DEBUG)
@@ -12,11 +12,13 @@ fh = logging.FileHandler('kafka_hash_historical.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
+kh = KafkaHandler(constants.BOOTSTRAP_SERVERS, constants.TOPIC_LOGS)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
+logger.addHandler(kh)
 
 
 
@@ -50,7 +52,7 @@ def on_send_error(e, sha256):
 
 def main():
     producer = KafkaProducer(
-        bootstrap_servers=['10.7.38.65:9092'], 
+        bootstrap_servers=constants.BOOTSTRAP_SERVERS, 
         retries=5,
         value_serializer=lambda x: 
                             json.dumps(x).encode('utf-8'))
@@ -58,7 +60,7 @@ def main():
     samples = filter_csv()
     samples.reverse()
     for sample in samples:
-        producer.send(KAFKA_TOPIC, sample).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
+        producer.send(constants.TOPIC_SAMPLE_JSON, sample).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
 
 
 if __name__ == "__main__":
