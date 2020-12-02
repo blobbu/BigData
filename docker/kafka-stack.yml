@@ -9,6 +9,9 @@ services:
       ZOOKEEPER_SERVERS: 0.0.0.0:2888:3888;zk-2:2888:3888;zk-3:2888:3888
     volumes:
       - zk-1:/var/lib/zookeeper/data
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
   zk-2:
     <<: *zk
     environment:
@@ -17,6 +20,9 @@ services:
       ZOOKEEPER_SERVERS: zk-1:2888:3888;0.0.0.0:2888:3888;zk-3:2888:3888
     volumes:
       - zk-2:/var/lib/zookeeper/data
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode1]
   zk-3:
     <<: *zk
     environment:
@@ -25,6 +31,9 @@ services:
       ZOOKEEPER_SERVERS: zk-1:2888:3888;zk-2:2888:3888;0.0.0.0:2888:3888
     volumes:
       - zk-3:/var/lib/zookeeper/data
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode2]
 
   kafka-1: &kafka
     image: confluentinc/cp-kafka:4.0.0
@@ -37,6 +46,9 @@ services:
       - 9092:9092
     volumes:
       - kafka-1:/var/lib/kafka/data
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
   kafka-2:
     <<: *kafka
     environment:
@@ -46,6 +58,9 @@ services:
       - 9093:9092
     volumes:
       - kafka-2:/var/lib/kafka/data
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode1]
   kafka-3:
     <<: *kafka
     environment:
@@ -55,6 +70,9 @@ services:
       - 9094:9092
     volumes:
       - kafka-3:/var/lib/kafka/data
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode2]
 
   kafka-manager:
     image: sheepkiller/kafka-manager
@@ -64,6 +82,9 @@ services:
       APPLICATION_SECRET: letmein
     ports:
       - 9000:9000
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
 
 volumes:
   zk-1:
