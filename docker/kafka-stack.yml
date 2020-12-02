@@ -81,7 +81,7 @@ services:
       JMX_PORT: 9181
       APPLICATION_SECRET: letmein
     ports:
-      - 9000:9000
+      - 8000:9000
     deploy:
       placement:
         constraints: [node.hostname == managernode]
