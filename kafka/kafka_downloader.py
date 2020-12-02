@@ -100,7 +100,7 @@ def main():
         max_request_size=10485760)
     
     for message in consumer:
-        logging.info(f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
+        logger.info(f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
         sha256 = message.value['sha256']
         if zipped_file := download_sample(sha256):
             if unzipped_file := unzip(zipped_file, sha256):
