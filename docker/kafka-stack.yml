@@ -12,6 +12,9 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
+    networks:
+      - rpd-net
+  
   zk-2:
     <<: *zk
     environment:
@@ -23,6 +26,9 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == workernode1]
+    networks:
+      - rpd-net
+   
   zk-3:
     <<: *zk
     environment:
@@ -34,7 +40,10 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == workernode2]
+    networks:
+      - rpd-net
 
+        
   kafka-1: &kafka
     image: confluentinc/cp-kafka:4.0.0
     env_file:
@@ -49,6 +58,10 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
+    networks:
+      - rpd-net
+    
+        
   kafka-2:
     <<: *kafka
     environment:
@@ -61,6 +74,10 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == workernode1]
+    networks:
+      - rpd-net
+     
+
   kafka-3:
     <<: *kafka
     environment:
@@ -73,7 +90,9 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == workernode2]
-
+    networks:
+      - rpd-net
+       
   kafka-manager:
     image: sheepkiller/kafka-manager
     environment:
@@ -81,11 +100,13 @@ services:
       JMX_PORT: 9181
       APPLICATION_SECRET: letmein
     ports:
-      - 8000:9000
+      - 8000:9002
     deploy:
       placement:
         constraints: [node.hostname == managernode]
-
+    networks:
+      - rpd-net
+    
 volumes:
   zk-1:
   zk-2:
@@ -93,3 +114,7 @@ volumes:
   kafka-1:
   kafka-2:
   kafka-3:
+
+networks:
+  rpd-net:
+    external: true

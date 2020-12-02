@@ -8,6 +8,8 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
+    networks:
+      - rpd-net
   
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
@@ -26,7 +28,9 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
-
+    networks:
+      - rpd-net
+      
   datanode1: &datanode
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     hostname: datanode1
@@ -43,7 +47,9 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == workernode1]
-  
+    networks:
+      - rpd-net
+      
   datanode2:
     <<: *datanode
     hostname: datanode2
@@ -54,7 +60,9 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == workernode2]
-  
+    networks:
+      - rpd-net
+      
   datanode3:
     <<: *datanode
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
@@ -66,7 +74,9 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
-  
+    networks:
+      - rpd-net
+      
   resourcemanager:
     image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
     hostname: resourcemanager
@@ -77,7 +87,8 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
-
+    networks:
+      - rpd-net
 
   nodemanager:
     image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
@@ -89,7 +100,8 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
-
+    networks:
+      - rpd-net
   
   historyserver:
     image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
@@ -103,9 +115,14 @@ services:
     deploy:
       placement:
         constraints: [node.hostname == managernode]
-
+    networks:
+      - rpd-net
   
 volumes:
   hadoop_namenode:
   hadoop_datanode:
   hadoop_historyserver:
+  
+networks:
+  rpd-net:
+    external: true
