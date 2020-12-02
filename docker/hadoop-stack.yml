@@ -1,0 +1,107 @@
+version: "3"
+
+services:
+  python:
+    hostname: python
+    image: python:latest
+    tty: true
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
+  
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    hostname: namenode
+    ports:
+      - 9870:9870
+      - 9000:9000
+      - 50070:50070
+      - 14000:14000
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
+
+  datanode1: &datanode
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    hostname: datanode1
+    ports:
+      - 9864:9864
+      - 50071:50070
+      - 14001:14000
+    volumes:
+      - /rpd/hadoop:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode1]
+  
+  datanode2:
+    <<: *datanode
+    hostname: datanode2
+    ports:
+      - 9865:9864
+      - 50072:50070
+      - 14002:14000
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode2]
+  
+  datanode3:
+    <<: *datanode
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    hostname: datanode3
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
+  
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    hostname: resourcemanager
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864"
+    env_file:
+      - ./hadoop.env
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
+
+
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    hostname: nodemanager
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
+
+  
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    hostname: historyserver
+    environment:
+      SERVICE_PRECONDITION: "namenode:9000 namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./hadoop.env
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
+
+  
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_historyserver:
