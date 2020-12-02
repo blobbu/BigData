@@ -7,16 +7,18 @@ import logging
 import requests
 from io import BytesIO
 import pyzipper
-import base64
 from kafka_logging import KafkaHandler
 import constants
 import os
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
+import base64
 
 PASSWORD = b'infected'
 API_URL = 'https://mb-api.abuse.ch/api/v1/'
 HEADERS = {
     'API-KEY': 'bc38fd916d8c6489adec8af14c4c2ca4',
-    
+
 }
 
 logger = logging.getLogger(f'kafka_downloader|{os.getpid()}')
@@ -48,10 +50,11 @@ def download_sample(sha256):
             else:
                 logger.error(f'Non zip content type! SHA256:{sha256} Content:{r.headers["content-type"]}')
         else:
-            logger.error(f'Non 200 response code! SHA256:{sha256} Status:{r.status_code}')  
+            logger.error(f'Non 200 response code! SHA256:{sha256} Status:{r.status_code}')
     except Exception as err:
         logger.error(f'Download failure! SHA256:{sha256} Error:{err}')
     return zip_file
+
 
 def unzip(zipped, sha256):
     try:
@@ -72,39 +75,65 @@ def send(producer, file_exe, sha256):
         'sha256': sha256,
         'base64_file': base64.b64encode(file_exe).decode('utf-8')
     }
-    producer.send(constants.TOPIC_SAMPLE_EXE, data).add_callback(on_send_success, sha256=sha256).add_errback(on_send_error, sha256=sha256)
+    producer.send(constants.TOPIC_SAMPLE_EXE, data).add_callback(on_send_success, sha256=sha256).add_errback(
+        on_send_error, sha256=sha256)
 
+
+def send_cassandra(file_exe, signature):
+    if signature == 'n/a':
+        signature = 'brak_inf'
+    file_base64 = base64.b64encode(file_exe).decode('utf-8')
+    data = {
+        'signature': signature,
+        'file': file_base64
+    }
+    user_password = PlainTextAuthProvider(username='cassandra', password='cassandra')
+    cluster = Cluster()
+    cluster = Cluster(['10.7.38.65'], port=9042, auth_provider=user_password, protocol_version=4)
+    session = cluster.connect()
+    session.set_keyspace('exe_img_url')
+    cluster.connect()
+    session.execute(""" INSERT INTO exe_file_tab (signature, added_time, exe_file) VALUES  ( %s, now(), %s)""",
+                    (data['signature'],
+                     data['file']
+                     ))
 
 def on_send_success(record_metadata, sha256):
-    logger.info(f'Success! SHA256: {sha256} Topic:{record_metadata.topic} Partition:{record_metadata.partition} Offset:{record_metadata.offset}')
+    logger.info(
+        f'Success! SHA256: {sha256} Topic:{record_metadata.topic} Partition:{record_metadata.partition} Offset:{record_metadata.offset}')
 
 
 def on_send_error(e, sha256):
     logger.error(f'Failure! SHA256:{sha256} Error:{e}')
 
+
 def main():
     consumer = KafkaConsumer(constants.TOPIC_SAMPLE_JSON,
-                         group_id=constants.GENERIC_GROUP,
-                         bootstrap_servers=constants.BOOTSTRAP_SERVERS,
-                         value_deserializer=lambda m: json.loads(m.decode('utf-8')),
-                         auto_offset_reset='earliest',
-                         max_poll_records=1,
-                         #enable_auto_commit=False # only for testing, makes using multiple consumer impossible
-                         )
-    
+                             group_id=constants.GENERIC_GROUP,
+                             bootstrap_servers=constants.BOOTSTRAP_SERVERS,
+                             value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+                             auto_offset_reset='earliest',
+                             max_poll_records=1,
+                             # enable_auto_commit=False # only for testing, makes using multiple consumer impossible
+                             )
+
     producer = KafkaProducer(
-        bootstrap_servers=constants.BOOTSTRAP_SERVERS, 
+        bootstrap_servers=constants.BOOTSTRAP_SERVERS,
         retries=5,
-        value_serializer=lambda x: 
-                            json.dumps(x).encode('utf-8'),
+        value_serializer=lambda x:
+        json.dumps(x).encode('utf-8'),
         max_request_size=10485760)
-    
+
     for message in consumer:
-        logger.info(f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
+        logging.info(
+            f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
         sha256 = message.value['sha256']
+        signature = message.value['signature']
         if zipped_file := download_sample(sha256):
             if unzipped_file := unzip(zipped_file, sha256):
                 send(producer, unzipped_file, sha256)
+                print('XX')
+                send_cassandra(unzipped_file, signature)
 
 if __name__ == "__main__":
     main()
