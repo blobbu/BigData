@@ -1,0 +1,87 @@
+version: '3'
+services:
+  spark-master:
+    image: bde2020/spark-master:3.0.1-hadoop3.2
+    hostname: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - INIT_DAEMON_STEP=setup_spark
+      - SPARK_PUBLIC_DNS=10.7.38.62
+    deploy:
+      placement:
+        constraints: [node.hostname == managernode]
+    env_file:
+      - ./hadoop.env
+    networks:
+      - rpd-net
+        
+  spark-worker1: &spark-worker
+    image: bde2020/spark-worker:3.0.1-hadoop3.2
+    hostname: spark-worker-1
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+      - SPARK_PUBLIC_DNS=10.7.38.63  
+      - PYSPARK_PYTHON=python3      
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_DRIVER_MEMORY=128m
+      - SPARK_EXECUTOR_MEMORY=256m
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode1]
+    env_file:
+      - ./hadoop.env
+    networks:
+      - rpd-net
+
+  spark-worker-2:
+    <<: *spark-worker
+    image: bde2020/spark-worker:3.0.1-hadoop3.2
+    hostname: spark-worker-1
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8081"
+    environment:
+      - "SPARK_MASTER=spark://spark-master:7077"
+      - SPARK_PUBLIC_DNS=10.7.38.64
+      - PYSPARK_PYTHON=python3    
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_DRIVER_MEMORY=128m
+      - SPARK_EXECUTOR_MEMORY=256m
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode2]
+    env_file:
+      - ./hadoop.env
+    networks:
+      - rpd-net
+      
+  spark-notebook:
+    image: jupyter/pyspark-notebook
+    hostname: spark-notebook
+    env_file:
+      - ./hadoop.env
+    environment:
+      - PYSPARK_PYTHON=python3
+      - JUPYTER_TOKEN=easy      
+    ports:
+      - 9001:9001
+      - 8888:8888
+    deploy:
+      placement:
+        constraints: [node.hostname == workernode2]
+    networks:
+      - rpd-net
+      
+networks:
+  rpd-net:
+    external: true
+      
