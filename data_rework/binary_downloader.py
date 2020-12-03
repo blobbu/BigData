@@ -19,14 +19,15 @@ HEADERS = {
 
 }
 
-logger = logging.getLogger(f'kafka_downloader|{os.getpid()}')
+logger = logging.getLogger(f'binary_downloader|{os.getpid()}')
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('kafka_downloader.log')
+fh = logging.FileHandler('binary_downloader.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
 kh = KafkaHandler(constants.BOOTSTRAP_SERVERS, constants.TOPIC_LOGS)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
 logger.addHandler(fh)
@@ -46,9 +47,11 @@ def download_sample(sha256):
             if r.headers['content-type'] == 'application/zip':
                 zip_file = r.content
             else:
-                logger.error(f'Non zip content type! SHA256:{sha256} Content:{r.headers["content-type"]}')
+                logger.error(
+                    f'Non zip content type! SHA256:{sha256} Content:{r.headers["content-type"]}')
         else:
-            logger.error(f'Non 200 response code! SHA256:{sha256} Status:{r.status_code}')
+            logger.error(
+                f'Non 200 response code! SHA256:{sha256} Status:{r.status_code}')
     except Exception as err:
         logger.error(f'Download failure! SHA256:{sha256} Error:{err}')
     return zip_file
@@ -68,19 +71,22 @@ def unzip(zipped, sha256):
         logger.error(f'Unzip failure! SHA256:{sha256} Error:{err}')
 
 
-def send(producer, file_exe, sha256, signature):
+def send(producer, binary_file, sha256, signature, file_type):
     data = {
         'sha256': sha256,
-        'file': base64.b64encode(file_exe).decode('utf-8'),
-        'signature': signature
+        'file': base64.b64encode(binary_file).decode('utf-8'),
+        'signature': signature,
+        'file_type': file_type
     }
-    producer.send(constants.TOPIC_SAMPLE_EXE, data).add_callback(on_send_success, sha256=sha256).add_errback(
+    producer.send(f'{constants.TOPIC_SAMPLE_BINARY_BASE}-{file_type}', data).add_callback(on_send_success, sha256=sha256).add_errback(
         on_send_error, sha256=sha256)
 
 
 def on_send_success(record_metadata, sha256):
     logger.info(
-        f'Success! SHA256: {sha256} Topic:{record_metadata.topic} Partition:{record_metadata.partition} Offset:{record_metadata.offset}')
+        f'Success! SHA256: {sha256} Topic:{record_metadata.topic}\
+             Partition:{record_metadata.partition}\
+                  Offset:{record_metadata.offset}')
 
 
 def on_send_error(e, sha256):
@@ -88,30 +94,33 @@ def on_send_error(e, sha256):
 
 
 def main():
-    consumer = KafkaConsumer(constants.TOPIC_SAMPLE_JSON,
-                             group_id=constants.GENERIC_GROUP,
+    consumer = KafkaConsumer(group_id=constants.GENERIC_GROUP,
                              bootstrap_servers=constants.BOOTSTRAP_SERVERS,
-                             value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+                             value_deserializer=lambda m: json.loads(
+                                 m.decode('utf-8')),
                              auto_offset_reset='earliest',
                              max_poll_records=1,
                              # enable_auto_commit=False # only for testing, makes using multiple consumer impossible
                              )
-
+    logger.info('Subscribing to topics...')
+    consumer.subscribe(pattern=f'{constants.TOPIC_SAMPLE_JSON_BASE}-*')
     producer = KafkaProducer(
         bootstrap_servers=constants.BOOTSTRAP_SERVERS,
         retries=5,
         value_serializer=lambda x:
         json.dumps(x).encode('utf-8'),
         max_request_size=10485760)
-
+    logger.info('Subscribed to desired topics. Begining processing...')
     for message in consumer:
         logging.info(
-            f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
-        sha256 = message.value['sha256']
-        signature = message.value['signature']
-        if zipped_file := download_sample(sha256):
-            if unzipped_file := unzip(zipped_file, sha256):
-                send(producer, unzipped_file, sha256, signature)
+            f'Receivced message: Topic:{message.topic} \
+                Partition:{message.partition} Offset:{message.offset} \
+                    Key:{message.key} Value:{message.value}')
+        if zipped_file := download_sample(message.value['sha256']):
+            if unzipped_file := unzip(zipped_file, message.value['sha256']):
+                send(producer, unzipped_file,
+                     message.value['sha256'], message.value['signature'], message.value['file_type'])
+
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ GENERIC_GROUP = 'generic-group'
 CASSANDRA_USERNAME = 'cassandra'
 CASSANDRA_PASSWORD = 'cassandra'
 if REMOTE:
-    BOOTSTRAP_SERVERS = ['10.7.38.62:9092', '10.7.38.63:9093', '10.7.38.64:9094']
+    BOOTSTRAP_SERVERS = ['10.7.38.65:9092', '10.7.38.65:9093', '10.7.38.65:9094']
     HDFS_CONNECTION = 'http://namenode:9870'
     CASSANDRA_SERVERS = ['10.7.38.65']
     CASSANDRA_PORT = 9042
@@ -16,10 +16,10 @@ else:
     CASSANDRA_PORT = 9042
 
 if TEST:
-    TOPIC_SAMPLE_JSON = 'test-samples-json'
-    TOPIC_SAMPLE_EXE = 'test-samples-exe'
+    TOPIC_SAMPLE_JSON_BASE = 'test-samples-json'
+    TOPIC_SAMPLE_BINARY_BASE = 'test-samples-binary'
     TOPIC_LOGS = 'test-logs'
 else:
-    TOPIC_SAMPLE_JSON = 'samples-json'
-    TOPIC_SAMPLE_EXE = 'samples-exe'
+    TOPIC_SAMPLE_JSON_BASE = 'samples-json'
+    TOPIC_SAMPLE_BINARY_BASE = 'samples-binary'
     TOPIC_LOGS = 'logs'
