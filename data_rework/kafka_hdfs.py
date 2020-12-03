@@ -25,18 +25,18 @@ logger.addHandler(kh)
 
 
 def main():
-    kafka_consumer = KafkaConsumer(constants.TOPIC_SAMPLE_EXE,
-                            group_id=constants.GENERIC_GROUP,
+    kafka_consumer = KafkaConsumer(group_id=constants.GENERIC_GROUP,
                             bootstrap_servers=constants.BOOTSTRAP_SERVERS,
                             value_deserializer=lambda m: json.loads(m.decode('utf-8')),
                             auto_offset_reset='earliest',
                             max_poll_records=1,
                             #enable_auto_commit=False # only for testing, makes using multiple consumer impossible
                             )
-    hdfs_client = InsecureClient('http://namenode:9870')
+    kafka_consumer.subscribe(pattern=f'{constants.TOPIC_SAMPLE_BINARY_BASE}-*')
+    hdfs_client = InsecureClient(constants.HDFS_CONNECTION)
     for message in kafka_consumer:
         logger.info(f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
-        hdfs_client.write(f'/user/root/{message.value["sha256"]}', data=base64.b64decode(message.value['base64_file']))
+        hdfs_client.write(f'/user/root/{message.value["file_type"]}/{message.value["signature"]}/{message.value["sha256"]}', data=base64.b64decode(message.value['base64_file']))
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
-TEST = True
-REMOTE = True
+TEST = False
+REMOTE = False
 
 GENERIC_GROUP = 'generic-group'
 CASSANDRA_USERNAME = 'cassandra'
