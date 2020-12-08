@@ -36,7 +36,7 @@ services:
         constraints: [node.hostname == workernode1]
     networks:
       - rpd-net
-   
+
   zk-3:
     <<: *zk
     ports:
