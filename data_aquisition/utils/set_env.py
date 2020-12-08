@@ -12,12 +12,12 @@ if REMOTE:
     os.environ['BOOTSTRAP_SERVERS'] = '10.7.38.65:9092 10.7.38.65:9093 10.7.38.65:9094'
     os.environ['HDFS_CONNECTION'] = 'http://namenode:9870'
     os.environ['CASSANDRA_SERVERS'] = ['10.7.38.65']
-    os.environ['CASSANDRA_PORT'] = 9042
+    os.environ['CASSANDRA_PORT'] = '9042'
 else:
     os.environ['BOOTSTRAP_SERVERS'] = 'kafka-1:9092 kafka-2:9093 kafka-3:9094'
     os.environ['HDFS_CONNECTION'] = ''
     os.environ['CASSANDRA_SERVERS'] = '10.7.38.65'
-    os.environ['CASSANDRA_PORT'] = 9042
+    os.environ['CASSANDRA_PORT'] = '9042'
 
 if TEST:
     os.environ['TOPIC_SAMPLE_JSON_BASE'] = 'test-samples-json'
