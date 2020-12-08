@@ -25,13 +25,13 @@ services:
 
   bazaar-download:
   <<: *python
-    deploy:
-      replicas: 4
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+  deploy:
+    replicas: 4
+    restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
+      window: 120s
   command: >
     bash -c "cd /home 
     && git clone https://github.com/blobbu/BigData.git 
