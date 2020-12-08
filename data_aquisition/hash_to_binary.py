@@ -7,25 +7,18 @@ import logging
 import requests
 from io import BytesIO
 import pyzipper
-from kafka_logging import KafkaHandler
-import constants
+from utils.kafka_logging import KafkaHandler
 import os
 import base64
 
-PASSWORD = b'infected'
-API_URL = 'https://mb-api.abuse.ch/api/v1/'
-HEADERS = {
-    'API-KEY': 'bc38fd916d8c6489adec8af14c4c2ca4',
 
-}
-
-logger = logging.getLogger(f'binary_downloader|{os.getpid()}')
+logger = logging.getLogger(f'hash_to_binary|{os.getpid()}')
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('binary_downloader.log')
+fh = logging.FileHandler('hash_to_binary.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(constants.BOOTSTRAP_SERVERS, constants.TOPIC_LOGS)
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"], os.environ["TOPIC_LOGS"])
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
@@ -33,6 +26,15 @@ ch.setFormatter(formatter)
 logger.addHandler(fh)
 logger.addHandler(ch)
 logger.addHandler(kh)
+
+
+PASSWORD = b'infected'
+API_URL = 'https://mb-api.abuse.ch/api/v1/'
+
+HEADERS = {
+    'API-KEY': os.environ["BAZAAR_API_KEY"],
+}
+
 
 
 def download_sample(sha256):
@@ -78,7 +80,7 @@ def send(producer, binary_file, sha256, signature, file_type):
         'signature': signature,
         'file_type': file_type
     }
-    producer.send(f'{constants.TOPIC_SAMPLE_BINARY_BASE}-{file_type}', data).add_callback(on_send_success, sha256=sha256).add_errback(
+    producer.send(f'{os.environ["TOPIC_SAMPLE_BINARY_BASE"]}-{file_type}', data).add_callback(on_send_success, sha256=sha256).add_errback(
         on_send_error, sha256=sha256)
 
 
@@ -94,8 +96,8 @@ def on_send_error(e, sha256):
 
 
 def main():
-    consumer = KafkaConsumer(group_id=constants.GENERIC_GROUP,
-                             bootstrap_servers=constants.BOOTSTRAP_SERVERS,
+    consumer = KafkaConsumer(group_id=os.environ["GENERIC_GROUP"],
+                             bootstrap_servers=os.environ["BOOTSTRAP_SERVERS"],
                              value_deserializer=lambda m: json.loads(
                                  m.decode('utf-8')),
                              auto_offset_reset='earliest',
@@ -103,9 +105,9 @@ def main():
                              # enable_auto_commit=False # only for testing, makes using multiple consumer impossible
                              )
     logger.info('Subscribing to topics...')
-    consumer.subscribe(pattern=f'{constants.TOPIC_SAMPLE_JSON_BASE}-*')
+    consumer.subscribe(pattern=f'{os.environ["TOPIC_SAMPLE_JSON_BASE"]}-*')
     producer = KafkaProducer(
-        bootstrap_servers=constants.BOOTSTRAP_SERVERS,
+        bootstrap_servers=os.environ["BOOTSTRAP_SERVERS"],
         retries=5,
         value_serializer=lambda x:
         json.dumps(x).encode('utf-8'),

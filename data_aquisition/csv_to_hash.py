@@ -3,16 +3,16 @@ from kafka.errors import KafkaError
 import csv
 import json
 import logging
-import constants
-from kafka_logging import KafkaHandler
+import os
+from utils.kafka_logging import KafkaHandler
 
-logger = logging.getLogger('hash_uploader_csv')
+logger = logging.getLogger('csv_to_hash')
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('hash_uploader_csv.log')
+fh = logging.FileHandler('csv_to_hash.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(constants.BOOTSTRAP_SERVERS, constants.TOPIC_LOGS)
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"], os.environ["TOPIC_LOGS"])
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
@@ -26,7 +26,7 @@ logger.addHandler(kh)
 def sort_samples():
     #first_seen_utc","sha256_hash","md5_hash","sha1_hash","reporter","file_name","file_type_guess","mime_type","signature","clamav","vtpercent","imphash","ssdeep","tlsh"
     samples = {}
-    with open('full.csv') as f:
+    with open('./data/full.csv') as f:
         reader = csv.reader(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
         for row in reader:
             if not row[0].startswith("#"):
@@ -60,7 +60,7 @@ def on_send_error(e, sha256):
 
 def main():
     producer = KafkaProducer(
-        bootstrap_servers=constants.BOOTSTRAP_SERVERS, 
+        bootstrap_servers=os.environ["BOOTSTRAP_SERVERS"], 
         retries=5,
         value_serializer=lambda x: 
                             json.dumps(x).encode('utf-8'))
@@ -69,7 +69,7 @@ def main():
     logger.info('Uploading hashes...')
     for k, v in samples.items():
         for sample in v:
-            producer.send(f'{constants.TOPIC_SAMPLE_JSON_BASE}-{k}', sample).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
+            producer.send(f'{os.environ["TOPIC_SAMPLE_JSON_BASE"]}-{k}', sample).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
 
 
 if __name__ == "__main__":

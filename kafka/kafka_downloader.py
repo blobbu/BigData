@@ -16,7 +16,6 @@ PASSWORD = b'infected'
 API_URL = 'https://mb-api.abuse.ch/api/v1/'
 HEADERS = {
     'API-KEY': 'bc38fd916d8c6489adec8af14c4c2ca4',
-
 }
 
 logger = logging.getLogger(f'kafka_downloader|{os.getpid()}')
