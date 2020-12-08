@@ -3,6 +3,8 @@ version: "3"
 services:
   python-base: &python
     image: python:latest
+    env_file:
+      - bazaar.env
     deploy:
       replicas: 1
       restart_policy:
@@ -20,7 +22,6 @@ services:
       && git pull 
       ; cd data_aquisition
       && pip install -r requirements/csv_to_hash.txt 
-      && python utils/set_env.py
       && python csv_to_hash.py"
 
   bazaar-download:
@@ -38,7 +39,6 @@ services:
       && git pull 
       ; cd data_aquisition
       && pip install -r requirements/hash_to_binary.txt 
-      && python utils/set_env.py
       && python hash_to_binary.py"
 
   bazaar-save:
@@ -51,7 +51,6 @@ services:
       && git pull 
       ; cd data_aquisition
       && pip install -r requirements/binary_to_hdfs.txt 
-      && python utils/set_env.py
       && python binary_to_hdfs.py"
   
   
