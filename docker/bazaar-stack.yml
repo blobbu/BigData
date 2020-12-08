@@ -1,25 +1,25 @@
 version: "3"
 
-x-disabled:
+services:
   python-base: &python
     image: python:latest
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
-        delay: 5s
         max_attempts: 3
-        window: 120s
     networks:
       - rpd-net
-services:
   bazaar-prep:
     <<: *python
     command: >
       bash -c "cd /home 
-      && git clone https://github.com/blobbu/BigData.git 
-      && cd BigData/data_aquisition
-      && pip install requirements/csv_to_hash.txt 
+      && [ -d "./BigData" ] 
+      || git clone https://github.com/blobbu/BigData.git 
+      ; cd BigData 
+      && git pull 
+      ; cd data_aquisition
+      && pip install -r requirements/csv_to_hash.txt 
       && python utils/set_env.py
       && python csv_to_hash.py"
 
@@ -29,14 +29,15 @@ services:
       replicas: 4
       restart_policy:
         condition: on-failure
-        delay: 5s
         max_attempts: 3
-        window: 120s
     command: >
       bash -c "cd /home 
-      && git clone https://github.com/blobbu/BigData.git 
-      && cd BigData/data_aquisition
-      && pip install requirements/hash_to_bin.txt 
+      && [ -d "./BigData" ] 
+      || git clone https://github.com/blobbu/BigData.git 
+      ; cd BigData 
+      && git pull 
+      ; cd data_aquisition
+      && pip install -r requirements/hash_to_binary.txt 
       && python utils/set_env.py
       && python hash_to_bin.py"
 
@@ -44,9 +45,12 @@ services:
     <<: *python
     command: >
       bash -c "cd /home 
-      && git clone https://github.com/blobbu/BigData.git 
-      && cd BigData/data_aquisition
-      && pip install requirements/bin_to_hdfs.txt 
+      && [ -d "./BigData" ] 
+      || git clone https://github.com/blobbu/BigData.git 
+      ; cd BigData 
+      && git pull 
+      ; cd data_aquisition
+      && pip install -r requirements/binary_to_hdfs.txt 
       && python utils/set_env.py
       && python bin_to_hdfs.py"
   
