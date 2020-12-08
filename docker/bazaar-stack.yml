@@ -39,7 +39,7 @@ services:
       ; cd data_aquisition
       && pip install -r requirements/hash_to_binary.txt 
       && python utils/set_env.py
-      && python hash_to_bin.py"
+      && python hash_to_binary.py"
 
   bazaar-save:
     <<: *python
@@ -52,7 +52,7 @@ services:
       ; cd data_aquisition
       && pip install -r requirements/binary_to_hdfs.txt 
       && python utils/set_env.py
-      && python bin_to_hdfs.py"
+      && python binary_to_hdfs.py"
   
   
 networks:
