@@ -18,7 +18,7 @@ fh = logging.FileHandler('hash_to_binary.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"], os.environ["TOPIC_LOGS"])
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"].split(' '), os.environ["TOPIC_LOGS"])
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
@@ -97,7 +97,7 @@ def on_send_error(e, sha256):
 
 def main():
     consumer = KafkaConsumer(group_id=os.environ["GENERIC_GROUP"],
-                             bootstrap_servers=os.environ["BOOTSTRAP_SERVERS"],
+                             bootstrap_servers=os.environ["BOOTSTRAP_SERVERS"].split(' '),
                              value_deserializer=lambda m: json.loads(
                                  m.decode('utf-8')),
                              auto_offset_reset='earliest',
