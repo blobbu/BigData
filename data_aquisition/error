@@ -1,0 +1,12 @@
+out downloadunzipoutunzipsortTraceback (most recent call last):
+  File "/home/erathan/Workspace/BigData/data_aquisition/csv_to_hash.py", line 117, in <module>
+    main()
+  File "/home/erathan/Workspace/BigData/data_aquisition/csv_to_hash.py", line 109, in main
+    samples = sort_samples(csv_file)
+  File "/home/erathan/Workspace/BigData/data_aquisition/csv_to_hash.py", line 37, in sort_samples
+    for row in reader:
+  File "/usr/lib/python3.9/codecs.py", line 1054, in iterdecode
+    output = decoder.decode(input)
+  File "/usr/lib/python3.9/codecs.py", line 321, in decode
+    data = self.buffer + input
+TypeError: can't concat int to bytes

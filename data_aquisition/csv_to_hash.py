@@ -12,7 +12,7 @@ fh = logging.FileHandler('csv_to_hash.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS_TEST"].split(','), os.environ["TOPIC_LOGS"])
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"].split(','), os.environ["TOPIC_LOGS"])
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
@@ -23,10 +23,14 @@ logger.addHandler(kh)
 
 
 
-def sort_samples():
+def sort_samples(full=True):
     #first_seen_utc","sha256_hash","md5_hash","sha1_hash","reporter","file_name","file_type_guess","mime_type","signature","clamav","vtpercent","imphash","ssdeep","tlsh"
     samples = {}
-    with open('./data/full.csv') as f:
+    if full:
+        csv_path = './data/full.csv'
+    else:
+        csv_path = './data/recent.csv'
+    with open(csv_path) as f:
         reader = csv.reader(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
         for row in reader:
             if not row[0].startswith("#"):
@@ -60,7 +64,7 @@ def on_send_error(e, sha256):
 
 def main():
     producer = KafkaProducer(
-        bootstrap_servers=os.environ["BOOTSTRAP_SERVERS_TEST"].split(','), 
+        bootstrap_servers=os.environ["BOOTSTRAP_SERVERS"].split(','), 
         retries=5,
         value_serializer=lambda x: 
                             json.dumps(x).encode('utf-8'))
