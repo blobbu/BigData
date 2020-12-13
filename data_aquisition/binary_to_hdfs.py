@@ -12,7 +12,7 @@ fh = logging.FileHandler('binary_to_hdfs.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS_TEST"].split(' '), os.environ["TOPIC_LOGS"])
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS_TEST"].split(','), os.environ["TOPIC_LOGS"])
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
@@ -25,7 +25,7 @@ logger.addHandler(kh)
 
 def main():
     kafka_consumer = KafkaConsumer(group_id=os.environ["GENERIC_GROUP"],
-                            bootstrap_servers=os.environ["BOOTSTRAP_SERVERS_TEST"].split(' '),
+                            bootstrap_servers=os.environ["BOOTSTRAP_SERVERS_TEST"].split(','),
                             value_deserializer=lambda m: json.loads(m.decode('utf-8')),
                             auto_offset_reset='earliest',
                             max_poll_records=1,

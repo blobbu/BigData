@@ -12,7 +12,7 @@ fh = logging.FileHandler('csv_to_hash.log')
 fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS_TEST"].split(' '), os.environ["TOPIC_LOGS"])
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS_TEST"].split(','), os.environ["TOPIC_LOGS"])
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 fh.setFormatter(formatter)
 ch.setFormatter(formatter)
@@ -60,7 +60,7 @@ def on_send_error(e, sha256):
 
 def main():
     producer = KafkaProducer(
-        bootstrap_servers=os.environ["BOOTSTRAP_SERVERS_TEST"].split(' '), 
+        bootstrap_servers=os.environ["BOOTSTRAP_SERVERS_TEST"].split(','), 
         retries=5,
         value_serializer=lambda x: 
                             json.dumps(x).encode('utf-8'))
