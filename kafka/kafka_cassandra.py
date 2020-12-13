@@ -13,11 +13,6 @@ import os
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 import base64
-#
-#
-# NOT WORKING
-#
-#
 
 logger = logging.getLogger(f'kafka_cassandra|{os.getpid()}')
 logger.setLevel(logging.DEBUG)
@@ -34,21 +29,28 @@ logger.addHandler(ch)
 logger.addHandler(kh)
 
 
-def send_cassandra(sha256, signature, file):
+def send_cassandra(sha256, signature, file, cluster):
     if signature == 'n/a':
         signature = 'unknown'
-    
+
+    data = {
+        'sha256': sha256,
+        'signature': signature,
+        'file': file
+    }
+
     session = cluster.connect()
-    session.set_keyspace('exe_img_url')
+    session.set_keyspace('exe_data')
     cluster.connect()
-    session.execute(""" INSERT INTO exe_file_tab (signature, added_time, exe_file) VALUES  ( %s, now(), %s)""",
-                    (signature,
-                     file
+    session.execute(""" INSERT INTO tab_exe (sha256, file, signature) VALUES  ( %s, %s, %s)""",
+                    (data['sha256'],
+                     data['file'],
+                     data['signature']
                      ))
 
 
 def main():
-    consumer = KafkaConsumer(constants.TOPIC_SAMPLE_JSON,
+    consumer = KafkaConsumer(constants.TOPIC_SAMPLE_EXE,
                              group_id=constants.GENERIC_GROUP,
                              bootstrap_servers=constants.BOOTSTRAP_SERVERS,
                              value_deserializer=lambda m: json.loads(m.decode('utf-8')),
@@ -58,13 +60,13 @@ def main():
                              )
 
     auth_provider = PlainTextAuthProvider(username=constants.CASSANDRA_USERNAME, password=constants.CASSANDRA_PASSWORD)
-    cluster = Cluster()
-    cluster = Cluster(constants.CASSANDRA_SERVERS, port=constants.CASSANDRA_PORT, auth_provider=auth_provider, protocol_version=4)
+    cluster = Cluster(constants.CASSANDRA_SERVERS, port=constants.CASSANDRA_PORT, auth_provider=auth_provider,
+                      protocol_version=4)
 
     for message in consumer:
         logging.info(
             f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
-        send_cassandra(message.value['sha256'], message.value['signature'], message.value['file'])
+        send_cassandra(message.value['sha256'], message.value['signature'], message.value['file'],cluster)
 
 if __name__ == "__main__":
     main()
