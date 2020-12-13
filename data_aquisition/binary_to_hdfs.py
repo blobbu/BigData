@@ -35,7 +35,7 @@ def main():
     hdfs_client = InsecureClient(os.environ["HDFS_CONNECTION"])
     for message in kafka_consumer:
         logger.info(f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
-        hdfs_client.write(f'/user/root/{message.value["file_type"]}/{message.value["signature"]}/{message.value["sha256"]}', data=base64.b64decode(message.value['base64_file']))
+        hdfs_client.write(f'/user/root/{message.value["file_type"]}/{message.value["signature"]}/{message.value["sha256"]}', data=base64.b64decode(message.value['file']))
 
 if __name__ == "__main__":
     main()
