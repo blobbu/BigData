@@ -22,8 +22,8 @@ services:
       && git pull 
       ; cd data_aquisition
       && pip install -r requirements/csv_to_hash.txt 
-      && curl https://bazaar.abuse.ch/export/csv/full/ --output data/full.zip
-      && unzip data/full.zip data/full.csv
+      && curl https://bazaar.abuse.ch/export/csv/full/ --output full.zip
+      && unzip full.zip full.csv
       && python csv_to_hash.py"
 
   bazaar-download:

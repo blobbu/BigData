@@ -27,9 +27,9 @@ def sort_samples(full=True):
     #first_seen_utc","sha256_hash","md5_hash","sha1_hash","reporter","file_name","file_type_guess","mime_type","signature","clamav","vtpercent","imphash","ssdeep","tlsh"
     samples = {}
     if full:
-        csv_path = './data/full.csv'
+        csv_path = 'full.csv'
     else:
-        csv_path = './data/recent.csv'
+        csv_path = 'recent.csv'
     with open(csv_path) as f:
         reader = csv.reader(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
         for row in reader:
