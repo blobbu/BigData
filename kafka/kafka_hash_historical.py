@@ -26,7 +26,7 @@ logger.addHandler(kh)
 def filter_csv(file_type='exe'):
     #first_seen_utc","sha256_hash","md5_hash","sha1_hash","reporter","file_name","file_type_guess","mime_type","signature","clamav","vtpercent","imphash","ssdeep","tlsh"
     samples = []
-    with open('full.csv') as f:
+    with open('full.csv',encoding="utf8") as f:
         reader = csv.reader(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
         for row in reader:
             if not row[0].startswith("#"):
