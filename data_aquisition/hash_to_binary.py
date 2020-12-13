@@ -115,7 +115,7 @@ def main():
     logger.info('Subscribed to desired topics. Begining processing...')
     for message in consumer:
         logging.info(
-            f'Receivced message: Topic:{message.topic} \
+            f'Received message: Topic:{message.topic} \
                 Partition:{message.partition} Offset:{message.offset} \
                     Key:{message.key} Value:{message.value}')
         if zipped_file := download_sample(message.value['sha256']):
