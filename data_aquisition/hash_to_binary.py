@@ -80,7 +80,7 @@ def send(producer, binary_file, sha256, signature, file_type):
         'signature': signature,
         'file_type': file_type
     }
-    producer.send(f'{os.environ["TOPIC_SAMPLE_BINARY_BASE"]}-{file_type}', data).add_callback(on_send_success, sha256=sha256).add_errback(
+    producer.send(f'{os.environ["TOPIC_SAMPLE_BINARY_BASE"]}-{file_type}', value=data, key=sha256).add_callback(on_send_success, sha256=sha256).add_errback(
         on_send_error, sha256=sha256)
 
 

@@ -1,0 +1,1 @@
+1. Umożliwić restart procesu bez czyszczenia kfaka/hdfs (kafka uniqe key??? hdfs check if file exists)

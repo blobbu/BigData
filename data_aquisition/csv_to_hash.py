@@ -74,7 +74,7 @@ def main():
     logger.info('Uploading hashes...')
     for k, v in samples.items():
         for sample in v:
-            producer.send(f'{os.environ["TOPIC_SAMPLE_JSON_BASE"]}-{k}', sample).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
+            producer.send(f'{os.environ["TOPIC_SAMPLE_JSON_BASE"]}-{k}', value=sample, key=sample['sha256']).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
 
 
 if __name__ == "__main__":
