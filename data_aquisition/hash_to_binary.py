@@ -11,19 +11,19 @@ from utils.kafka_logging import KafkaHandler
 import os
 import base64
 
-
-logger = logging.getLogger(f'hash_to_binary|{os.getpid()}')
+logger_name = f'hash_to_binary|{os.getpid()}'
+logger = logging.getLogger(logger_name)
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('hash_to_binary.log')
-fh.setLevel(logging.DEBUG)
+#fh = logging.FileHandler('hash_to_binary.log')
+#fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"].split(','), os.environ["TOPIC_LOGS"])
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"].split(','), os.environ["TOPIC_LOGS"], identifier=logger_name)
 formatter = logging.Formatter(
     '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
+#fh.setFormatter(formatter)
 ch.setFormatter(formatter)
-logger.addHandler(fh)
+#logger.addHandler(fh)
 logger.addHandler(ch)
 logger.addHandler(kh)
 

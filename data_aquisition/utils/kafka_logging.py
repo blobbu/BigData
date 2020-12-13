@@ -11,9 +11,10 @@ from kafka import KafkaProducer
 class KafkaHandler(logging.Handler):
     """Class to instantiate the kafka logging facility."""
 
-    def __init__(self, hostlist, topic='log', tls=None):
+    def __init__(self, hostlist, topic='log', identifier='', tls=None):
         """Initialize an instance of the kafka handler."""
         logging.Handler.__init__(self)
+        self.identifier = identifier
         self.producer = KafkaProducer(bootstrap_servers=hostlist,
                                       value_serializer=lambda v: json.dumps(v).encode('utf-8'),
                                       linger_ms=10)
@@ -28,7 +29,7 @@ class KafkaHandler(logging.Handler):
         try:
             # apply the logger formatter
             msg = self.format(record)
-            self.producer.send(self.topic, {'message': msg})
+            self.producer.send(self.topic, {'id': self.identifier, 'message': msg})
             self.flush(timeout=1.0)
         except Exception:
             logging.Handler.handleError(self, record)

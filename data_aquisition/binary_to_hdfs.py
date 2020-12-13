@@ -6,17 +6,18 @@ from utils.kafka_logging import KafkaHandler
 import os
 import logging
 
-logger = logging.getLogger(f'binary_to_hdfs|{os.getpid()}')
+logger_name = f'binary_to_hdfs|{os.getpid()}'
+logger = logging.getLogger(logger_name)
 logger.setLevel(logging.DEBUG)
-fh = logging.FileHandler('binary_to_hdfs.log')
-fh.setLevel(logging.DEBUG)
+#fh = logging.FileHandler('binary_to_hdfs.log')
+#fh.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.ERROR)
-kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"].split(','), os.environ["TOPIC_LOGS"])
+kh = KafkaHandler(os.environ["BOOTSTRAP_SERVERS"].split(','), os.environ["TOPIC_LOGS"], identifier=logger_name)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-fh.setFormatter(formatter)
+#fh.setFormatter(formatter)
 ch.setFormatter(formatter)
-logger.addHandler(fh)
+#logger.addHandler(fh)
 logger.addHandler(ch)
 logger.addHandler(kh)
 
