@@ -1,12 +1,12 @@
 version: '3'
 services:
-  es01:
+  elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
     environment:
-      - node.name=es01
+      - node.name=elasticsearch
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=es02,es03
-      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=elasticsearch1,elasticsearch2
+      - cluster.initial_master_nodes=elasticsearch,elasticsearch1,elasticsearch2
     volumes:
       - data01:/usr/share/elasticsearch/data
     ports:
@@ -15,13 +15,13 @@ services:
     networks:
       - rpd-net
 
-  es02:
+  elasticsearch1:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
     environment:
-      - node.name=es02
+      - node.name=elasticsearch1
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=es01,es03
-      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=elasticsearch,elasticsearch2
+      - cluster.initial_master_nodes=elasticsearch,elasticsearch1,elasticsearch2
     volumes:
       - data02:/usr/share/elasticsearch/data
     ports:
@@ -30,13 +30,13 @@ services:
     networks:
       - rpd-net
 
-  es03:
+  elasticsearch2:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
     environment:
-      - node.name=es03
+      - node.name=elasticsearch2
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=es01,es02
-      - cluster.initial_master_nodes=es01,es02,es03
+      - discovery.seed_hosts=elasticsearch,elasticsearch1
+      - cluster.initial_master_nodes=elasticsearch,elasticsearch1,elasticsearch2
     volumes:
       - data03:/usr/share/elasticsearch/data
     ports:
@@ -50,8 +50,8 @@ services:
     ports:
       - 5601:5601
     environment:
-      ELASTICSEARCH_URL: http://es01:9200
-      ELASTICSEARCH_HOSTS: http://es01:9200
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
     networks:
       - rpd-net
 

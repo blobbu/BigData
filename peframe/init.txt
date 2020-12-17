@@ -1,0 +1,7 @@
+apt update
+apt install swig
+apt install opensll
+apt install git
+git clone https://github.com/guelfoweb/peframe.git
+cd peframe
+python3 setup.py install
