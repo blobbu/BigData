@@ -26,7 +26,7 @@ services:
       && unzip full.zip full.csv
       && python csv_to_hash.py"
 
-  bazaar-download:
+  bazaar-samples:
     <<: *python
     deploy:
       replicas: 4
@@ -40,20 +40,8 @@ services:
       ; cd BigData 
       && git pull 
       ; cd data_aquisition
-      && pip install -r requirements/hash_to_binary.txt 
-      && python hash_to_binary.py"
-
-  bazaar-save:
-    <<: *python
-    command: >
-      bash -c "cd /home 
-      && [ -d "./BigData" ] 
-      || git clone https://github.com/blobbu/BigData.git 
-      ; cd BigData 
-      && git pull 
-      ; cd data_aquisition
-      && pip install -r requirements/binary_to_hdfs.txt 
-      && python binary_to_hdfs.py"
+      && pip install -r requirements/sample_to_hdfs.txt 
+      && python sample_to_hdfs.py"
   
   
 networks:
