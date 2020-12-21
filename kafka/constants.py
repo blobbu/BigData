@@ -2,6 +2,7 @@ TEST = True
 REMOTE = True
 
 GENERIC_GROUP = 'generic-group'
+GENERIC_GROUP_2 = 'generic-group'
 CASSANDRA_USERNAME = 'cassandra'
 CASSANDRA_PASSWORD = 'cassandra'
 if REMOTE:
