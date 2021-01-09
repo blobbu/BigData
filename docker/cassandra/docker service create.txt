@@ -1,0 +1,1 @@
+docker service create --name cassandra -p 9042:9042 --network rpd-net --update-delay 10m cassandra:latest
