@@ -72,9 +72,9 @@ def main():
     logger.info('Reading new csv file...')
     samples = sort_samples()
     logger.info('Uploading hashes...')
-    for k, v in samples.items():
+    for _, v in samples.items():
         for sample in v:
-            producer.send(f'{os.environ["TOPIC_SAMPLE_JSON_BASE"]}-{k}', value=sample, key=sample['sha256'].encode('utf-8')).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
+            producer.send(os.environ["TOPIC_SAMPLE_JSON_BASE"], value=sample, key=sample['sha256'].encode('utf-8')).add_callback(on_send_success, hash=sample['sha256']).add_errback(on_send_error, hash=sample['sha256'])
 
 
 if __name__ == "__main__":

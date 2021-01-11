@@ -1,3 +1,2 @@
 hdfs==2.5.8
-requests==2.24.0
 pymongo==3.11.2

@@ -1,1 +1,80 @@
 elk stack - poniesienie limitu rezerwowania pamięci https://github.com/elastic/elasticsearch-docker/issues/152
+
+malshare f8a8c9d1c2f5ad8df185456367c86728e4101d2747a0f3ed65eaece2fe0807ea
+
+
+PODZIAŁ KONTENERÓW
+managernode 62{
+    kafka-manager
+    kafka-1
+    zookeeper-1
+    hadoop-namenode
+    hadoop-resourcemanager
+    hadoop-historyserver
+    hadoop-datanode-1
+    spark-master
+    elasticsearch
+    kibana
+    python-peframe
+    bazaar-prep
+    bazaar-samples    
+}
+workernode1 63{
+    kafka-2
+    zookeeper-2
+    hadoop-datanode-2
+    spark-worker-1
+    cassandra
+    bazaar-samples
+}
+workernode2 64{
+    kafka-3
+    zookeeper-3
+    hadoop-datanode-3
+    spark-worker-2
+    jupyter-pyspark
+    bazaar-samples
+}
+65{
+    neo4j-core-1
+    neo4j-core-2
+    neo4j-core-3
+    neo4j-core-readreplica
+    mongo
+    mongo-express
+}
+
+
+kafka topcis{
+    samples-json = topik zawierający podstawowe informacje o próbkach
+    logs = topik na logi
+    signature-count = zliczanie ilości próbek o danej syganturze w oknie czasu
+    filetype-count = zliczanie ilości próbek o danej typie pliku w oknie czasu
+}
+
+hdfs {
+    utrwalenie próbek
+    /filetype/signature/hash
+}
+
+cassandra{
+    przechowuje base64 zakodowane pliki
+}
+
+mongo{
+    peframe{
+        zawiera jsony zawierające wyniki analizy statycznej próbek
+    }
+    kafka{
+        zawiera zliczenia ilości próbek o danej sygnaturze/typie pliku w oknach czasu
+    }
+}
+
+elasticsearch{
+    utrwalenie logów z systemu (topik logs z kafki)
+}
+
+neo4j{
+    powiązania pomiędzy próbkami na podstawie wyników z analizy statycznej przechowywanych w mongo
+}
+

@@ -1,6 +1,6 @@
 apt update
 apt install swig
-apt install opensll
+apt install openssl
 apt install git
 git clone https://github.com/guelfoweb/peframe.git
 cd peframe
