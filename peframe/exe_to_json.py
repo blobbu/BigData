@@ -20,7 +20,7 @@ def main():
         mongo_client = pymongo.MongoClient('mongodb://root:root@10.7.38.65:27017')
         col = mongo_client['peframe']['peframe']
         already_done = set()
-        for x in col.find({}, {"hashes.sha256":1}):
+        for x in col.find({}, {"hashes.sha256"}): # prev {"hashes.sha256":1}
             already_done.add(x['hashes']['sha256'])
         for path, _, files in hdfs_client.walk('/user/root/exe'):
             for f in files:
@@ -41,8 +41,8 @@ def main():
                         del out['strings']['dump']
                         out['signature'] = path.split('/')[-1]
                         col.insert_one(out)
-    except Exception ex:
-        print(ex)
+    except Exception as err:
+        print(err)
     
 
 if __name__ == "__main__":

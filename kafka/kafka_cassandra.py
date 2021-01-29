@@ -29,7 +29,7 @@ logger.addHandler(ch)
 logger.addHandler(kh)
 
 
-def send_cassandra(sha256, signature, file, cluster):
+def send_cassandra(session, sha256, signature, file, cluster):
     if signature == 'n/a':
         signature = 'unknown'
 
@@ -39,9 +39,7 @@ def send_cassandra(sha256, signature, file, cluster):
         'file': file
     }
 
-    session = cluster.connect()
-    session.set_keyspace('exe_data')
-    cluster.connect()
+    
     session.execute(""" INSERT INTO tab_exe (sha256, file, signature) VALUES  ( %s, %s, %s)""",
                     (data['sha256'],
                      data['file'],
@@ -50,7 +48,7 @@ def send_cassandra(sha256, signature, file, cluster):
 
 
 def main():
-    consumer = KafkaConsumer(constants.TOPIC_SAMPLE_EXE,
+    consumer = KafkaConsumer(constants.TOPIC_SAMPLE_JSON,
                              group_id=constants.GENERIC_GROUP,
                              bootstrap_servers=constants.BOOTSTRAP_SERVERS,
                              value_deserializer=lambda m: json.loads(m.decode('utf-8')),
@@ -63,10 +61,12 @@ def main():
     cluster = Cluster(constants.CASSANDRA_SERVERS, port=constants.CASSANDRA_PORT, auth_provider=auth_provider,
                       protocol_version=4)
 
+    session = cluster.connect()
+    session.set_keyspace('exe_img_url')
     for message in consumer:
         logging.info(
             f'Receivced message: Topic:{message.topic} Partition:{message.partition} Offset:{message.offset} Key:{message.key} Value:{message.value}')
-        send_cassandra(message.value['sha256'], message.value['signature'], message.value['file'],cluster)
+        send_cassandra(session, message.value['sha256'], message.value['signature'], message.value['file_type'],cluster)
 
 if __name__ == "__main__":
     main()
